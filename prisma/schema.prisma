@@ -1,0 +1,214 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL") // Tambahkan baris ini
+}
+
+// ─── Enums ──────────────────────────────────────────────────────────────────
+
+enum Role {
+  student
+  admin
+}
+
+enum TryoutType {
+  simulation
+  practice
+}
+
+enum SessionStatus {
+  ongoing
+  completed
+}
+
+enum TransactionStatus {
+  pending
+  settlement
+  expire
+  cancel
+}
+
+enum SubscriptionStatus {
+  active
+  expired
+  canceled
+}
+
+// ─── Module 1: User & Access Management ───────────────────────────────────────
+// id is NOT auto-generated — it comes from Supabase Auth JWT `sub` claim.
+// No FK to auth.users so this works with plain PostgreSQL in local dev.
+
+model Profile {
+  id                   String   @id
+  email                String
+  fullName             String
+  role                 Role     @default(student)
+  dailyTargetQuestions Int      @default(10)
+  phoneNumber          String?
+  dreamMajor           String?
+  createdAt            DateTime @default(now())
+
+  sessions      TryoutSession[]
+  transactions  Transaction[]
+  subscriptions UserSubscription[]
+
+  @@map("profiles")
+}
+
+// ─── Module 2: Taxonomy ────────────────────────────────────────────────────────
+
+model Subject {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+
+  topics    Topic[]
+  questions Question[]
+
+  @@map("subjects")
+}
+
+model Topic {
+  id        String  @id @default(uuid())
+  subjectId String
+  subject   Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  name      String
+
+  questions Question[]
+
+  @@map("topics")
+}
+
+// ─── Module 3: Exam Core ───────────────────────────────────────────────────────
+
+model Tryout {
+  id              String     @id @default(uuid())
+  title           String
+  type            TryoutType @default(simulation)
+  durationMinutes Int
+  maxAttempts     Int?
+  isPremium       Boolean    @default(false)
+  isPublished     Boolean    @default(false)
+  isActive        Boolean    @default(true)
+
+  questions Question[]
+  sessions  TryoutSession[]
+
+  @@map("tryouts")
+}
+
+model Question {
+  id             String  @id @default(uuid())
+  tryoutId       String
+  tryout         Tryout  @relation(fields: [tryoutId], references: [id], onDelete: Cascade)
+  subjectId      String
+  subject        Subject @relation(fields: [subjectId], references: [id], onDelete: Cascade)
+  topicId        String?
+  topic          Topic?  @relation(fields: [topicId], references: [id], onDelete: SetNull)
+  sequenceNumber Int
+  text           String  @db.Text
+  imageUrl       String?
+  explanation    String? @db.Text
+  isActive       Boolean @default(true)
+
+  options Option[]
+  answers UserAnswer[]
+
+  @@map("questions")
+}
+
+model Option {
+  id             String   @id @default(uuid())
+  questionId     String
+  question       Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  sequenceNumber Int
+  text           String
+  imageUrl       String?
+  isCorrect      Boolean  @default(false)
+
+  answers UserAnswer[]
+
+  @@map("options")
+}
+
+// ─── Module 4: Activity & Progress ────────────────────────────────────────────
+
+model TryoutSession {
+  id        String        @id @default(uuid())
+  userId    String
+  profile   Profile       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tryoutId  String
+  tryout    Tryout        @relation(fields: [tryoutId], references: [id], onDelete: Cascade)
+  startTime DateTime      @default(now())
+  endTime   DateTime?
+  score     Int?
+  status    SessionStatus @default(ongoing)
+
+  answers UserAnswer[]
+
+  @@map("tryout_sessions")
+}
+
+model UserAnswer {
+  id                String        @id @default(uuid())
+  sessionId         String
+  session           TryoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  questionId        String
+  question          Question      @relation(fields: [questionId], references: [id], onDelete: Cascade)
+  optionId          String?
+  option            Option?       @relation(fields: [optionId], references: [id], onDelete: SetNull)
+  isMarkedForReview Boolean       @default(false)
+
+  @@map("user_answers")
+}
+
+// ─── Module 5: Subscription & Payment ─────────────────────────────────────────
+
+model SubscriptionPlan {
+  id           String  @id @default(uuid())
+  name         String
+  price        Int
+  durationDays Int
+  isActive     Boolean @default(true)
+
+  transactions  Transaction[]
+  subscriptions UserSubscription[]
+
+  @@map("subscription_plans")
+}
+
+model Transaction {
+  id              String            @id @default(uuid())
+  userId          String
+  profile         Profile           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId          String
+  plan            SubscriptionPlan  @relation(fields: [planId], references: [id], onDelete: Cascade)
+  midtransOrderId String            @unique
+  amount          Int
+  status          TransactionStatus @default(pending)
+  paymentUrl      String?
+  createdAt       DateTime          @default(now())
+
+  subscription UserSubscription?
+
+  @@map("transactions")
+}
+
+model UserSubscription {
+  id            String             @id @default(uuid())
+  userId        String
+  profile       Profile            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  planId        String
+  plan          SubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
+  transactionId String             @unique
+  transaction   Transaction        @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  startDate     DateTime
+  endDate       DateTime
+  status        SubscriptionStatus @default(active)
+
+  @@map("user_subscriptions")
+}
