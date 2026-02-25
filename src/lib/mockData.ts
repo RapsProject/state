@@ -70,7 +70,7 @@ export const mockTryout = {
   title: "IUP ITB Grand Simulation - Batch 1",
   type: "simulation",
   duration_minutes: 120,
-  max_attempts: 1,
+  max_attempts: 5,
   is_premium: true,
   is_published: true,
 };
