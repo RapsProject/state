@@ -20,6 +20,11 @@ app.use(morgan(env.NODE_ENV === "production" ? "combined" : "dev"));
 app.use(express.json({ limit: "1mb" }));
 
 const healthPayload = () => ok("Operation successful", { status: "ok" });
+
+app.get("/", (_req, res) => {
+  res.json(healthPayload());
+});
+
 app.get("/health", (_req, res) => res.json(healthPayload()));
 app.get("/api/health", (_req, res) => res.json(healthPayload()));
 
