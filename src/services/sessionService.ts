@@ -103,7 +103,20 @@ export async function submitSession(sessionId: string, userId: string) {
       answers: {
         include: {
           option: { select: { id: true, isCorrect: true } },
-          question: { select: { id: true, explanation: true } },
+          question: {
+            select: {
+              id: true,
+              explanation: true,
+              options: {
+                select: {
+                  id: true,
+                  sequenceNumber: true,
+                  text: true,
+                  isCorrect: true,
+                },
+              },
+            },
+          },
         },
       },
     },
@@ -120,7 +133,19 @@ export async function getSession(sessionId: string, userId: string) {
             select: { id: true, sequenceNumber: true, text: true, isCorrect: true },
           },
           question: {
-            select: { id: true, sequenceNumber: true, explanation: true },
+            select: {
+              id: true,
+              sequenceNumber: true,
+              explanation: true,
+              options: {
+                select: {
+                  id: true,
+                  sequenceNumber: true,
+                  text: true,
+                  isCorrect: true,
+                },
+              },
+            },
           },
         },
         orderBy: { question: { sequenceNumber: "asc" } },
@@ -139,6 +164,7 @@ export async function getSession(sessionId: string, userId: string) {
         option: a.option
           ? { id: a.option.id, sequenceNumber: a.option.sequenceNumber, text: a.option.text }
           : null,
+        // For ongoing sessions we don't expose explanations or correct options.
         question: { id: a.question.id, sequenceNumber: a.question.sequenceNumber },
       })),
     };
