@@ -7,6 +7,7 @@ import sessionRoutes from "./v1/sessionRoutes";
 import subscriptionRoutes from "./v1/subscriptionRoutes";
 import dashboardRoutes from "./v1/dashboardRoutes";
 import profileRoutes from "./v1/profileRoutes";
+import leaderboardRoutes from "./v1/leaderboardRoutes";
 
 const router = Router();
 
@@ -18,5 +19,6 @@ router.use("/api/v1/sessions", sessionRoutes);
 router.use("/api/v1/dashboard", dashboardRoutes);
 router.use("/api/v1/profile", profileRoutes);
 router.use("/api/v1", subscriptionRoutes);
+router.use("/api/v1/leaderboard", leaderboardRoutes);
 
 export default router;
