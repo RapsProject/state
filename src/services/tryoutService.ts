@@ -75,3 +75,9 @@ export async function updateTryout(id: string, input: UpdateTryoutInput) {
   await getTryoutById(id);
   return prisma.tryout.update({ where: { id }, data: input });
 }
+
+export async function deleteTryout(id: string) {
+  await getTryoutById(id);
+  await prisma.tryout.delete({ where: { id } });
+  return { id };
+}

@@ -69,3 +69,13 @@ export const listTryouts: RequestHandler = async (_req, res, next) => {
     return next(e);
   }
 };
+
+export const deleteTryout: RequestHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params as { id: string };
+    const data = await tryoutService.deleteTryout(id);
+    return res.json(ok("Tryout deleted", data));
+  } catch (e) {
+    return next(e);
+  }
+};

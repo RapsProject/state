@@ -13,5 +13,6 @@ router.get("/users/summary", adminController.getUsersSummary);
 
 // Tryouts management for admin
 router.get("/tryouts", adminController.listTryouts);
+router.delete("/tryouts/:id", adminController.deleteTryout);
 
 export default router;
