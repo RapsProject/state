@@ -17,6 +17,10 @@ const listQuerySchema = z.object({
   subjectId: z.string().uuid().optional(),
   topicId: z.string().uuid().optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
+  includeInactive: z
+    .string()
+    .optional()
+    .transform((v) => v === "true" || v === "1"),
 });
 
 const optionSchema = z.object({

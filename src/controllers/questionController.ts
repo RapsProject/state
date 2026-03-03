@@ -4,26 +4,25 @@ import * as questionService from "../services/questionService";
 
 export const listQuestions: RequestHandler = async (req, res, next) => {
   try {
-    const { tryoutId, subjectId, topicId, limit } = req.query as Record<
+    const { tryoutId, subjectId, topicId, limit, includeInactive } = req.query as Record<
       string,
       string | undefined
     >;
 
-    // 1. Buat penampung filter kosong dengan tipe data yang sesuai
     const filters: {
       tryoutId?: string;
       subjectId?: string;
       topicId?: string;
       limit?: number;
+      includeInactive?: boolean;
     } = {};
 
-    // 2. Isi penampung HANYA jika nilainya ada (tidak undefined)
     if (tryoutId) filters.tryoutId = tryoutId;
     if (subjectId) filters.subjectId = subjectId;
     if (topicId) filters.topicId = topicId;
     if (limit) filters.limit = Number(limit);
+    if (includeInactive === "true" || includeInactive === "1") filters.includeInactive = true;
 
-    // 3. Kirim objek filter yang sudah bersih
     const data = await questionService.listQuestions(filters);
 
     return res.json(ok("Operation successful", data));
