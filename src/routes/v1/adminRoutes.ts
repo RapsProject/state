@@ -11,4 +11,7 @@ router.use(adminOnly);
 router.get("/users", adminController.listUsers);
 router.get("/users/summary", adminController.getUsersSummary);
 
+// Tryouts management for admin
+router.get("/tryouts", adminController.listTryouts);
+
 export default router;

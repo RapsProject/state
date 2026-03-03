@@ -1,6 +1,7 @@
 import type { RequestHandler } from "express";
 import { prisma } from "../config/prisma";
 import { ok } from "../utils/response";
+import * as tryoutService from "../services/tryoutService";
 
 export const listUsers: RequestHandler = async (_req, res, next) => {
   try {
@@ -51,6 +52,19 @@ export const getUsersSummary: RequestHandler = async (_req, res, next) => {
         totalStudents: totalUsers - totalAdmin,
       }),
     );
+  } catch (e) {
+    return next(e);
+  }
+};
+
+export const listTryouts: RequestHandler = async (_req, res, next) => {
+  try {
+    // Admin: lihat semua tryout, termasuk yang tidak aktif / belum published
+    const data = await tryoutService.listTryouts({
+      onlyPublished: false,
+      includeInactive: true,
+    });
+    return res.json(ok("Operation successful", data));
   } catch (e) {
     return next(e);
   }
