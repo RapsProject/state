@@ -10,7 +10,8 @@ const leaderboardQuerySchema = z
   .object({
     filterType: z.enum(["OVERALL", "SUBJECT", "TRYOUT"]),
     subject: z.enum(["MATHEMATICS", "PHYSICS"]).optional(),
-    examId: z.string().uuid().optional(),
+    // Allow any non-empty string ID (our seeded tryout IDs are not UUIDs)
+    examId: z.string().min(1).optional(),
     limit: z
       .union([z.string().regex(/^\d+$/), z.number().int().positive()])
       .optional()
