@@ -10,13 +10,17 @@ import * as questionController from "../../controllers/questionController";
 
 const router = Router();
 
-const idParamsSchema = z.object({ id: z.string().uuid() });
+const idParamsSchema = z.object({ id: z.string().min(1) });
 
 const listQuerySchema = z.object({
-  tryoutId: z.string().uuid().optional(),
-  subjectId: z.string().uuid().optional(),
-  topicId: z.string().uuid().optional(),
+  tryoutId: z.string().min(1).optional(),
+  subjectId: z.string().min(1).optional(),
+  topicId: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
+  includeInactive: z
+    .string()
+    .optional()
+    .transform((v) => v === "true" || v === "1"),
 });
 
 const optionSchema = z.object({
@@ -28,9 +32,9 @@ const optionSchema = z.object({
 
 // 1. Buat Base Schema (TANPA superRefine)
 const baseQuestionSchema = z.object({
-  tryoutId: z.string().uuid(),
-  subjectId: z.string().uuid(),
-  topicId: z.string().uuid().optional(),
+  tryoutId: z.string().min(1),
+  subjectId: z.string().min(1),
+  topicId: z.string().min(1).optional(),
   sequenceNumber: z.number().int().positive(),
   text: z.string().min(1),
   imageUrl: z.string().url().optional(),
