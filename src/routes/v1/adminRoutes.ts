@@ -10,6 +10,7 @@ router.use(adminOnly);
 
 router.get("/users", adminController.listUsers);
 router.get("/users/summary", adminController.getUsersSummary);
+router.get("/users/:id/sessions", adminController.getUserSessions);
 
 // Tryouts management for admin
 router.get("/tryouts", adminController.listTryouts);
