@@ -69,6 +69,7 @@ const adminSelect = {
 
 export async function listQuestions(params: {
   tryoutId?: string;
+  tryoutType?: "simulation" | "practice";
   subjectId?: string;
   topicId?: string;
   limit?: number;
@@ -76,6 +77,7 @@ export async function listQuestions(params: {
 }) {
   const where: Prisma.QuestionWhereInput = params.includeInactive ? {} : { isActive: true };
   if (params.tryoutId) where.tryoutId = params.tryoutId;
+  else if (params.tryoutType) where.tryout = { type: params.tryoutType };
   if (params.subjectId) where.subjectId = params.subjectId;
   if (params.topicId) where.topicId = params.topicId;
 

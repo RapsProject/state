@@ -14,6 +14,7 @@ const idParamsSchema = z.object({ id: z.string().min(1) });
 
 const listQuerySchema = z.object({
   tryoutId: z.string().min(1).optional(),
+  tryoutType: z.enum(["simulation", "practice"]).optional(),
   subjectId: z.string().min(1).optional(),
   topicId: z.string().min(1).optional(),
   limit: z.coerce.number().int().min(1).max(200).default(50),
