@@ -4,13 +4,14 @@ import * as questionService from "../services/questionService";
 
 export const listQuestions: RequestHandler = async (req, res, next) => {
   try {
-    const { tryoutId, subjectId, topicId, limit, includeInactive } = req.query as Record<
+    const { tryoutId, tryoutType, subjectId, topicId, limit, includeInactive } = req.query as Record<
       string,
       string | undefined
     >;
 
     const filters: {
       tryoutId?: string;
+      tryoutType?: "simulation" | "practice";
       subjectId?: string;
       topicId?: string;
       limit?: number;
@@ -18,6 +19,7 @@ export const listQuestions: RequestHandler = async (req, res, next) => {
     } = {};
 
     if (tryoutId) filters.tryoutId = tryoutId;
+    if (tryoutType === "simulation" || tryoutType === "practice") filters.tryoutType = tryoutType;
     if (subjectId) filters.subjectId = subjectId;
     if (topicId) filters.topicId = topicId;
     if (limit) filters.limit = Number(limit);
