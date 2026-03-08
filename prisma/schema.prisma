@@ -201,8 +201,10 @@ model Transaction {
 model UserSubscription {
   id            String             @id @default(uuid())
   userId        String
+  userName      String?            // Nama user saat subscription dibuat (untuk tampilan di tabel)
   profile       Profile            @relation(fields: [userId], references: [id], onDelete: Cascade)
   planId        String
+  planName      String?            // Nama plan saat subscription dibuat (untuk tampilan di tabel)
   plan          SubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
   transactionId String             @unique
   transaction   Transaction        @relation(fields: [transactionId], references: [id], onDelete: Cascade)

@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { z } from "zod";
 import { authMiddleware } from "../../middlewares/auth";
+import { requirePremiumOrUltimate } from "../../middlewares/subscription";
 import { validateQuery } from "../../middlewares/validation";
 import * as leaderboardController from "../../controllers/leaderboardController";
 
@@ -35,6 +36,7 @@ const leaderboardQuerySchema = z
   });
 
 router.use(authMiddleware);
+router.use(requirePremiumOrUltimate);
 
 router.get("/", validateQuery(leaderboardQuerySchema), leaderboardController.getLeaderboard);
 
