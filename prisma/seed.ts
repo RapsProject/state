@@ -43,7 +43,7 @@ async function main() {
       type: mockTryout.type as any, // 'simulation'
       durationMinutes: mockTryout.duration_minutes,
       maxAttempts: mockTryout.max_attempts,
-      isPremium: mockTryout.is_premium,
+      access: mockTryout.is_premium ? "premium" : "free",
       isPublished: mockTryout.is_published,
     },
   });

@@ -1,4 +1,4 @@
-import type { Prisma, TryoutType } from "@prisma/client";
+import type { Prisma, TryoutAccess, TryoutType } from "@prisma/client";
 import { prisma } from "../config/prisma";
 import { HttpError } from "../middlewares/error";
 
@@ -41,10 +41,23 @@ const tryoutBaseSelect = {
   type: true,
   durationMinutes: true,
   maxAttempts: true,
-  isPremium: true,
+  access: true,
   isPublished: true,
   isActive: true,
 } satisfies Prisma.TryoutSelect;
+
+function toTryoutAccess(isPremium?: boolean): TryoutAccess | undefined {
+  if (isPremium === undefined) return undefined;
+  return isPremium ? "premium" : "free";
+}
+
+function toTryoutResponse<T extends { access: TryoutAccess }>(tryout: T) {
+  const { access, ...rest } = tryout;
+  return {
+    ...rest,
+    isPremium: access !== "free",
+  };
+}
 
 type ListTryoutsOptions = {
   onlyPublished?: boolean;
@@ -64,7 +77,7 @@ export async function listTryouts(options?: ListTryoutsOptions) {
     select: tryoutBaseSelect,
   });
 
-  return tryouts;
+  return tryouts.map(toTryoutResponse);
 }
 
 export async function getTryoutById(id: string, includeQuestions = false) {
@@ -82,23 +95,31 @@ export async function getTryoutById(id: string, includeQuestions = false) {
       : tryoutBaseSelect,
   });
   if (!tryout) throw new HttpError(404, "Tryout not found");
-  return tryout;
+  return toTryoutResponse(tryout);
 }
 
 export async function createTryout(input: CreateTryoutInput) {
+  const { isPremium, ...rest } = input;
   return prisma.tryout.create({
-    data: input,
+    data: {
+      ...rest,
+      ...(isPremium !== undefined ? { access: toTryoutAccess(isPremium) } : {}),
+    },
     select: tryoutBaseSelect,
-  });
+  }).then(toTryoutResponse);
 }
 
 export async function updateTryout(id: string, input: UpdateTryoutInput) {
   await getTryoutById(id);
+  const { isPremium, ...rest } = input;
   return prisma.tryout.update({
     where: { id },
-    data: input,
+    data: {
+      ...rest,
+      ...(isPremium !== undefined ? { access: toTryoutAccess(isPremium) } : {}),
+    },
     select: tryoutBaseSelect,
-  });
+  }).then(toTryoutResponse);
 }
 
 export async function deleteTryout(id: string) {

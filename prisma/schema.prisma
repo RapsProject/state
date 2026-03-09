@@ -20,6 +20,12 @@ enum TryoutType {
   practice
 }
 
+enum TryoutAccess {
+  free
+  premium
+  ultimate
+}
+
 enum SessionStatus {
   ongoing
   completed
@@ -91,7 +97,7 @@ model Tryout {
   type            TryoutType @default(simulation)
   durationMinutes Int
   maxAttempts     Int?
-  isPremium       Boolean    @default(false) @map("access")
+  access          TryoutAccess @default(free) @map("access")
   isPublished     Boolean    @default(false)
   isActive        Boolean    @default(true)
 
