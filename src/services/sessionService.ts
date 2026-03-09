@@ -21,6 +21,10 @@ export async function startSession(
 
   const tryout = await prisma.tryout.findUnique({
     where: { id: tryoutId, isActive: true, isPublished: true },
+    select: {
+      id: true,
+      maxAttempts: true,
+    },
   });
   if (!tryout) throw new HttpError(404, "Tryout not found or not published");
 
