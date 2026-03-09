@@ -39,7 +39,29 @@ const publicSelect = {
       sequenceNumber: true,
       text: true,
       imageUrl: true,
-      // isCorrect intentionally omitted
+      // isCorrect intentionally omitted for student-facing endpoints
+    },
+    orderBy: { sequenceNumber: "asc" as const },
+  },
+} satisfies Prisma.QuestionSelect;
+
+const adminSelect = {
+  id: true,
+  tryoutId: true,
+  subjectId: true,
+  topicId: true,
+  sequenceNumber: true,
+  text: true,
+  imageUrl: true,
+  explanation: true,
+  isActive: true,
+  options: {
+    select: {
+      id: true,
+      sequenceNumber: true,
+      text: true,
+      imageUrl: true,
+      isCorrect: true,
     },
     orderBy: { sequenceNumber: "asc" as const },
   },
@@ -47,20 +69,25 @@ const publicSelect = {
 
 export async function listQuestions(params: {
   tryoutId?: string;
+  tryoutType?: "simulation" | "practice";
   subjectId?: string;
   topicId?: string;
   limit?: number;
+  includeInactive?: boolean;
 }) {
-  const where: Prisma.QuestionWhereInput = { isActive: true };
+  const where: Prisma.QuestionWhereInput = params.includeInactive ? {} : { isActive: true };
   if (params.tryoutId) where.tryoutId = params.tryoutId;
+  else if (params.tryoutType) where.tryout = { type: params.tryoutType };
   if (params.subjectId) where.subjectId = params.subjectId;
   if (params.topicId) where.topicId = params.topicId;
+
+  const select = params.includeInactive ? adminSelect : publicSelect;
 
   return prisma.question.findMany({
     where,
     orderBy: { sequenceNumber: "asc" },
     take: params.limit ?? 50,
-    select: publicSelect,
+    select,
   });
 }
 

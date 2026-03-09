@@ -61,18 +61,20 @@ async function getOverallLeaderboard(limit: number): Promise<LeaderboardEntry[]>
     },
     _avg: {
       score: true
-    },
-    orderBy: {
-      _avg: {
-        score: "desc"
-      }
-    },
-    take: limit
+    }
   });
 
   if (grouped.length === 0) return [];
 
-  const userIds = grouped.map((g) => g.userId);
+  const sorted = grouped
+    .map((g) => ({
+      userId: g.userId,
+      avgScore: g._avg.score ?? 0
+    }))
+    .sort((a, b) => b.avgScore - a.avgScore)
+    .slice(0, limit);
+
+  const userIds = sorted.map((g) => g.userId);
   const profiles = await prisma.profile.findMany({
     where: { id: { in: userIds } },
     select: {
@@ -83,9 +85,9 @@ async function getOverallLeaderboard(limit: number): Promise<LeaderboardEntry[]>
 
   const profileMap = new Map(profiles.map((p) => [p.id, p]));
 
-  const entries = grouped.map<LeaderboardEntry>((item, index) => {
+  const entries = sorted.map<LeaderboardEntry>((item, index) => {
     const profile = profileMap.get(item.userId);
-    const score = item._avg.score ?? 0;
+    const score = item.avgScore;
 
     return {
       rank: index + 1,
@@ -123,18 +125,20 @@ async function getTryoutLeaderboard(examId: string, limit: number): Promise<Lead
     },
     _max: {
       score: true
-    },
-    orderBy: {
-      _max: {
-        score: "desc"
-      }
-    },
-    take: limit
+    }
   });
 
   if (grouped.length === 0) return [];
 
-  const userIds = grouped.map((g) => g.userId);
+  const sorted = grouped
+    .map((g) => ({
+      userId: g.userId,
+      maxScore: g._max.score ?? 0
+    }))
+    .sort((a, b) => b.maxScore - a.maxScore)
+    .slice(0, limit);
+
+  const userIds = sorted.map((g) => g.userId);
   const profiles = await prisma.profile.findMany({
     where: { id: { in: userIds } },
     select: {
@@ -145,9 +149,9 @@ async function getTryoutLeaderboard(examId: string, limit: number): Promise<Lead
 
   const profileMap = new Map(profiles.map((p) => [p.id, p]));
 
-  const entries = grouped.map<LeaderboardEntry>((item, index) => {
+  const entries = sorted.map<LeaderboardEntry>((item, index) => {
     const profile = profileMap.get(item.userId);
-    const score = item._max.score ?? 0;
+    const score = item.maxScore;
 
     return {
       rank: index + 1,

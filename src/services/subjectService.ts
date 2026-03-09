@@ -24,3 +24,17 @@ export async function createTopic(subjectId: string, name: string) {
   await getSubjectById(subjectId);
   return prisma.topic.create({ data: { subjectId, name } });
 }
+
+export async function deleteSubject(id: string) {
+  await getSubjectById(id);
+  return prisma.subject.delete({ where: { id } });
+}
+
+export async function deleteTopic(subjectId: string, topicId: string) {
+  await getSubjectById(subjectId);
+  const topic = await prisma.topic.findFirst({ where: { id: topicId, subjectId } });
+  if (!topic) {
+    throw new HttpError(404, "Topic not found");
+  }
+  return prisma.topic.delete({ where: { id: topicId } });
+}

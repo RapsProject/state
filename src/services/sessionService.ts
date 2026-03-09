@@ -24,20 +24,20 @@ export async function startSession(
   });
   if (!tryout) throw new HttpError(404, "Tryout not found or not published");
 
-  if (tryout.maxAttempts !== null) {
-    const attemptCount = await prisma.tryoutSession.count({
-      where: { userId, tryoutId },
-    });
-    if (attemptCount >= tryout.maxAttempts) {
-      throw new HttpError(403, "Maximum attempts reached for this tryout");
-    }
-  }
-
   const ongoingSession = await prisma.tryoutSession.findFirst({
     where: { userId, tryoutId, status: "ongoing" },
   });
   if (ongoingSession) {
     return ongoingSession;
+  }
+
+  if (tryout.maxAttempts !== null) {
+    const completedAttemptCount = await prisma.tryoutSession.count({
+      where: { userId, tryoutId, status: "completed" },
+    });
+    if (completedAttemptCount >= tryout.maxAttempts) {
+      throw new HttpError(403, "Maximum attempts reached for this tryout");
+    }
   }
 
   return prisma.tryoutSession.create({

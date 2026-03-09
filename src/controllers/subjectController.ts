@@ -40,3 +40,23 @@ export const createTopic: RequestHandler = async (req, res, next) => {
     return next(e);
   }
 };
+
+export const deleteSubject: RequestHandler = async (req, res, next) => {
+  try {
+    const { id } = req.params as { id: string };
+    await subjectService.deleteSubject(id);
+    return res.status(204).send();
+  } catch (e) {
+    return next(e);
+  }
+};
+
+export const deleteTopic: RequestHandler = async (req, res, next) => {
+  try {
+    const { id, topicId } = req.params as { id: string; topicId: string };
+    await subjectService.deleteTopic(id, topicId);
+    return res.status(204).send();
+  } catch (e) {
+    return next(e);
+  }
+};

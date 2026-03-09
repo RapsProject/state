@@ -11,7 +11,9 @@ export type CreateTryoutInput = {
   isPublished?: boolean;
 };
 
-export type UpdateTryoutInput = Partial<CreateTryoutInput> & { isActive?: boolean };
+export type UpdateTryoutInput = Partial<CreateTryoutInput> & {
+  isActive?: boolean;
+};
 
 const publicQuestionSelect = {
   id: true,
@@ -33,9 +35,18 @@ const publicQuestionSelect = {
   },
 } satisfies Prisma.QuestionSelect;
 
-export async function listTryouts(onlyPublished = true) {
-  const where: Prisma.TryoutWhereInput = { isActive: true };
+type ListTryoutsOptions = {
+  onlyPublished?: boolean;
+  includeInactive?: boolean;
+};
+
+export async function listTryouts(options?: ListTryoutsOptions) {
+  const { onlyPublished = true, includeInactive = false } = options ?? {};
+
+  const where: Prisma.TryoutWhereInput = {};
+  if (!includeInactive) where.isActive = true;
   if (onlyPublished) where.isPublished = true;
+
   return prisma.tryout.findMany({ where, orderBy: { title: "asc" } });
 }
 
@@ -63,4 +74,10 @@ export async function createTryout(input: CreateTryoutInput) {
 export async function updateTryout(id: string, input: UpdateTryoutInput) {
   await getTryoutById(id);
   return prisma.tryout.update({ where: { id }, data: input });
+}
+
+export async function deleteTryout(id: string) {
+  await getTryoutById(id);
+  await prisma.tryout.delete({ where: { id } });
+  return { id };
 }
