@@ -8,11 +8,20 @@ import { errorMiddleware } from "./middlewares/error";
 import { ok } from "./utils/response";
 
 export const app = express();
+const allowedOrigins = (env.CORS_ORIGIN ?? "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
 
 app.use(helmet());
 app.use(
   cors({
-    origin: env.CORS_ORIGIN ?? true,
+    origin(origin, callback) {
+      if (allowedOrigins.length === 0 || origin == null || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      return callback(new Error(`Origin ${origin} is not allowed by CORS`));
+    },
     credentials: true
   })
 );
