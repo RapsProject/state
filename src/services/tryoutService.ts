@@ -41,16 +41,10 @@ const tryoutBaseSelect = {
   type: true,
   durationMinutes: true,
   maxAttempts: true,
+  isPremium: true,
   isPublished: true,
   isActive: true,
 } satisfies Prisma.TryoutSelect;
-
-function withIsPremiumFallback<T extends object>(tryout: T) {
-  return {
-    ...tryout,
-    isPremium: false,
-  };
-}
 
 type ListTryoutsOptions = {
   onlyPublished?: boolean;
@@ -70,7 +64,7 @@ export async function listTryouts(options?: ListTryoutsOptions) {
     select: tryoutBaseSelect,
   });
 
-  return tryouts.map(withIsPremiumFallback);
+  return tryouts;
 }
 
 export async function getTryoutById(id: string, includeQuestions = false) {
@@ -88,27 +82,23 @@ export async function getTryoutById(id: string, includeQuestions = false) {
       : tryoutBaseSelect,
   });
   if (!tryout) throw new HttpError(404, "Tryout not found");
-  return withIsPremiumFallback(tryout);
+  return tryout;
 }
 
 export async function createTryout(input: CreateTryoutInput) {
-  const { isPremium: _isPremium, ...data } = input;
-  const tryout = await prisma.tryout.create({
-    data,
+  return prisma.tryout.create({
+    data: input,
     select: tryoutBaseSelect,
   });
-  return withIsPremiumFallback(tryout);
 }
 
 export async function updateTryout(id: string, input: UpdateTryoutInput) {
   await getTryoutById(id);
-  const { isPremium: _isPremium, ...data } = input;
-  const tryout = await prisma.tryout.update({
+  return prisma.tryout.update({
     where: { id },
-    data,
+    data: input,
     select: tryoutBaseSelect,
   });
-  return withIsPremiumFallback(tryout);
 }
 
 export async function deleteTryout(id: string) {

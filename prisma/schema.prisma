@@ -91,7 +91,7 @@ model Tryout {
   type            TryoutType @default(simulation)
   durationMinutes Int
   maxAttempts     Int?
-  isPremium       Boolean    @default(false)
+  isPremium       Boolean    @default(false) @map("access")
   isPublished     Boolean    @default(false)
   isActive        Boolean    @default(true)
 
