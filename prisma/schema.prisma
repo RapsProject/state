@@ -24,6 +24,7 @@ enum TryoutAccess {
   free
   premium
   ultimate
+  premium_and_ultimate
 }
 
 enum SessionStatus {

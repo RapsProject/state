@@ -14,6 +14,7 @@ const createTryoutSchema = z.object({
   durationMinutes: z.number().int().positive(),
   maxAttempts: z.number().int().positive().optional(),
   isPremium: z.boolean().default(false),
+  isUltimate: z.boolean().default(false),
   isPublished: z.boolean().default(false),
 });
 

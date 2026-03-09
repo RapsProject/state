@@ -2,6 +2,7 @@ import { prisma } from "../config/prisma";
 import { HttpError } from "../middlewares/error";
 import { gradeSession } from "./gradingService";
 import * as userService from "./userService";
+import { canAccessTryout, getUserTryoutAccessContext } from "./tryoutService";
 
 export type StartSessionOptions = {
   email?: string;
@@ -23,10 +24,16 @@ export async function startSession(
     where: { id: tryoutId, isActive: true, isPublished: true },
     select: {
       id: true,
+      access: true,
       maxAttempts: true,
     },
   });
   if (!tryout) throw new HttpError(404, "Tryout not found or not published");
+
+  const accessContext = await getUserTryoutAccessContext(userId);
+  if (accessContext.role !== "admin" && !canAccessTryout(tryout.access, accessContext.tier)) {
+    throw new HttpError(403, "Akses tryout ini memerlukan subscription yang sesuai.");
+  }
 
   const ongoingSession = await prisma.tryoutSession.findFirst({
     where: { userId, tryoutId, status: "ongoing" },

@@ -8,6 +8,7 @@ export const listTryouts: RequestHandler = async (req, res, next) => {
     const data = await tryoutService.listTryouts({
       onlyPublished: true,
       includeInactive: false,
+      userId: req.user!.id,
     });
     return res.json(ok("Operation successful", data));
   } catch (e) {
@@ -18,7 +19,7 @@ export const listTryouts: RequestHandler = async (req, res, next) => {
 export const getTryout: RequestHandler = async (req, res, next) => {
   try {
     const { id } = req.params as { id: string };
-    const data = await tryoutService.getTryoutById(id, true);
+    const data = await tryoutService.getTryoutById(id, true, req.user!.id);
     return res.json(ok("Operation successful", data));
   } catch (e) {
     return next(e);
