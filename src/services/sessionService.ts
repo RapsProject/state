@@ -12,7 +12,7 @@ export type StartSessionOptions = {
 export async function startSession(
   userId: string,
   tryoutId: string,
-  options: StartSessionOptions = {}
+  options: StartSessionOptions = {},
 ) {
   await userService.syncProfile({
     id: userId,
@@ -31,8 +31,14 @@ export async function startSession(
   if (!tryout) throw new HttpError(404, "Tryout not found or not published");
 
   const accessContext = await getUserTryoutAccessContext(userId);
-  if (accessContext.role !== "admin" && !canAccessTryout(tryout.access, accessContext.tier)) {
-    throw new HttpError(403, "Akses tryout ini memerlukan subscription yang sesuai.");
+  if (
+    accessContext.role !== "admin" &&
+    !canAccessTryout(tryout.access, accessContext.tier)
+  ) {
+    throw new HttpError(
+      403,
+      "Akses tryout ini memerlukan subscription yang sesuai.",
+    );
   }
 
   const ongoingSession = await prisma.tryoutSession.findFirst({
@@ -61,12 +67,15 @@ export async function saveAnswer(
   userId: string,
   questionId: string,
   optionId: string | null,
-  isMarkedForReview = false
+  isMarkedForReview = false,
 ) {
-  const session = await prisma.tryoutSession.findUnique({ where: { id: sessionId } });
+  const session = await prisma.tryoutSession.findUnique({
+    where: { id: sessionId },
+  });
   if (!session) throw new HttpError(404, "Session not found");
   if (session.userId !== userId) throw new HttpError(403, "Forbidden");
-  if (session.status === "completed") throw new HttpError(400, "Session is already completed");
+  if (session.status === "completed")
+    throw new HttpError(400, "Session is already completed");
 
   if (optionId !== null) {
     const option = await prisma.option.findUnique({
@@ -96,10 +105,13 @@ export async function saveAnswer(
 }
 
 export async function submitSession(sessionId: string, userId: string) {
-  const session = await prisma.tryoutSession.findUnique({ where: { id: sessionId } });
+  const session = await prisma.tryoutSession.findUnique({
+    where: { id: sessionId },
+  });
   if (!session) throw new HttpError(404, "Session not found");
   if (session.userId !== userId) throw new HttpError(403, "Forbidden");
-  if (session.status === "completed") throw new HttpError(400, "Session is already completed");
+  if (session.status === "completed")
+    throw new HttpError(400, "Session is already completed");
 
   const result = await gradeSession(sessionId);
 
@@ -141,7 +153,12 @@ export async function getSession(sessionId: string, userId: string) {
       answers: {
         include: {
           option: {
-            select: { id: true, sequenceNumber: true, text: true, isCorrect: true },
+            select: {
+              id: true,
+              sequenceNumber: true,
+              text: true,
+              isCorrect: true,
+            },
           },
           question: {
             select: {
@@ -173,10 +190,17 @@ export async function getSession(sessionId: string, userId: string) {
       answers: session.answers.map((a) => ({
         ...a,
         option: a.option
-          ? { id: a.option.id, sequenceNumber: a.option.sequenceNumber, text: a.option.text }
+          ? {
+              id: a.option.id,
+              sequenceNumber: a.option.sequenceNumber,
+              text: a.option.text,
+            }
           : null,
         // For ongoing sessions we don't expose explanations or correct options.
-        question: { id: a.question.id, sequenceNumber: a.question.sequenceNumber },
+        question: {
+          id: a.question.id,
+          sequenceNumber: a.question.sequenceNumber,
+        },
       })),
     };
   }
