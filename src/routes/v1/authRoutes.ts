@@ -9,6 +9,7 @@ const router = Router();
 const syncBodySchema = z.object({
   email: z.string().email().optional(),
   full_name: z.string().optional(),
+  school_origin: z.string().optional(),
 });
 
 router.use(authMiddleware);

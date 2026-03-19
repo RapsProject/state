@@ -5,12 +5,13 @@ import * as userService from "../services/userService";
 export const syncProfile: RequestHandler = async (req, res, next) => {
   try {
     const user = req.user!;
-    const { full_name, email } = req.body as { full_name?: string; email?: string };
+    const { full_name, email, school_origin } = req.body as { full_name?: string; email?: string; school_origin?: string };
 
     const profile = await userService.syncProfile({
       id: user.id,
       email: email ?? (user.email ?? ""),
       fullName: full_name ?? (user.claims?.["user_metadata"] as Record<string, string> | undefined)?.["full_name"] ?? "",
+      schoolOrigin: school_origin,
     });
 
     return res.json(ok("Profile synced", profile));

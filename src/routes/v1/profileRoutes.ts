@@ -10,6 +10,7 @@ const updateProfileSchema = z.object({
   phoneNumber: z.string().optional(),
   dreamMajor: z.string().optional(),
   fullName: z.string().optional(),
+  schoolOrigin: z.string().optional(),
 });
 
 router.use(authMiddleware);

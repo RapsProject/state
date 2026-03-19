@@ -14,6 +14,7 @@ export const listUsers: RequestHandler = async (_req, res, next) => {
         role: true,
         dreamMajor: true,
         phoneNumber: true,
+        schoolOrigin: true,
         createdAt: true,
         subscriptions: {
           select: {
