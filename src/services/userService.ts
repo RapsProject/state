@@ -5,6 +5,7 @@ export type SyncProfileInput = {
   id: string;
   email: string;
   fullName: string;
+  schoolOrigin?: string;
 };
 
 export async function syncProfile(input: SyncProfileInput) {
@@ -14,10 +15,12 @@ export async function syncProfile(input: SyncProfileInput) {
       id: input.id,
       email: input.email,
       fullName: input.fullName,
+      ...(input.schoolOrigin != null && { schoolOrigin: input.schoolOrigin }),
     },
     update: {
       email: input.email,
       fullName: input.fullName,
+      ...(input.schoolOrigin != null && { schoolOrigin: input.schoolOrigin }),
     },
   });
 }
@@ -40,7 +43,7 @@ export async function getProfileById(id: string) {
 
 export async function updateProfile(
   id: string,
-  data: { phoneNumber?: string; dreamMajor?: string; fullName?: string }
+  data: { phoneNumber?: string; dreamMajor?: string; fullName?: string; schoolOrigin?: string }
 ) {
   const profile = await prisma.profile.findUnique({ where: { id } });
   if (!profile) throw new HttpError(404, "Profile not found");

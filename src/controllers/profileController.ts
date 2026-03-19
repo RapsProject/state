@@ -23,6 +23,7 @@ export const updateMe: RequestHandler = async (req, res, next) => {
       phoneNumber?: string;
       dreamMajor?: string;
       fullName?: string;
+      schoolOrigin?: string;
     };
     const profile = await userService.updateProfile(userId, data);
     return res.json(ok("Profile updated", profile));

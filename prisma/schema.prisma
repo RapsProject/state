@@ -57,6 +57,7 @@ model Profile {
   dailyTargetQuestions Int      @default(10)
   phoneNumber          String?
   dreamMajor           String?
+  schoolOrigin         String?  @map("school_origin")
   createdAt            DateTime @default(now())
 
   sessions      TryoutSession[]
