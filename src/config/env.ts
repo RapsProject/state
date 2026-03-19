@@ -13,6 +13,8 @@ const EnvSchema = z.object({
   DIRECT_URL: z.string().min(1).optional(),
 
   SUPABASE_JWT_SECRET: z.string().min(1),
+  SUPABASE_URL: z.string().url().optional(),
+  SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
   CORS_ORIGIN: z.string().optional()
 });
 

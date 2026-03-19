@@ -9,6 +9,7 @@ import dashboardRoutes from "./v1/dashboardRoutes";
 import profileRoutes from "./v1/profileRoutes";
 import leaderboardRoutes from "./v1/leaderboardRoutes";
 import adminRoutes from "./v1/adminRoutes";
+import uploadRoutes from "./v1/uploadRoutes";
 
 const router = Router();
 
@@ -22,5 +23,6 @@ router.use("/api/v1/profile", profileRoutes);
 router.use("/api/v1", subscriptionRoutes);
 router.use("/api/v1/leaderboard", leaderboardRoutes);
 router.use("/api/v1/admin", adminRoutes);
+router.use("/api/v1/upload", uploadRoutes);
 
 export default router;
