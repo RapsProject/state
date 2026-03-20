@@ -9,10 +9,10 @@ const router = Router();
 
 const leaderboardQuerySchema = z
   .object({
-    filterType: z.enum(["OVERALL", "SUBJECT", "TRYOUT"]),
+    filterType: z.enum(["OVERALL", "SUBJECT", "TRYOUT", "DREAM_MAJOR"]),
     subject: z.enum(["MATHEMATICS", "PHYSICS"]).optional(),
-    // Allow any non-empty string ID (our seeded tryout IDs are not UUIDs)
     examId: z.string().min(1).optional(),
+    dreamMajor: z.string().min(1).optional(),
     limit: z
       .union([z.string().regex(/^\d+$/), z.number().int().positive()])
       .optional()
@@ -33,11 +33,20 @@ const leaderboardQuerySchema = z
         message: "examId is required when filterType is TRYOUT"
       });
     }
+
+    if (value.filterType === "DREAM_MAJOR" && !value.dreamMajor) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ["dreamMajor"],
+        message: "dreamMajor is required when filterType is DREAM_MAJOR"
+      });
+    }
   });
 
 router.use(authMiddleware);
 router.use(requirePremiumOrUltimate);
 
+router.get("/dream-majors", leaderboardController.getDreamMajors);
 router.get("/", validateQuery(leaderboardQuerySchema), leaderboardController.getLeaderboard);
 
 export default router;
