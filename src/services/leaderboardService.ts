@@ -1,7 +1,7 @@
 import { prisma } from "../config/prisma";
 import { HttpError } from "../middlewares/error";
 
-export type LeaderboardFilterType = "OVERALL" | "SUBJECT" | "TRYOUT";
+export type LeaderboardFilterType = "OVERALL" | "SUBJECT" | "TRYOUT" | "DREAM_MAJOR";
 
 export type SubjectFilter = "MATHEMATICS" | "PHYSICS";
 
@@ -9,6 +9,7 @@ export type LeaderboardParams = {
   filterType: LeaderboardFilterType;
   subject?: SubjectFilter;
   examId?: string;
+  dreamMajor?: string;
   limit?: number;
 };
 
@@ -44,10 +45,29 @@ export async function getLeaderboard(params: LeaderboardParams): Promise<Leaderb
         throw new HttpError(400, "subject is required when filterType is SUBJECT");
       }
       return getSubjectLeaderboard(params.subject, limit);
+    case "DREAM_MAJOR":
+      if (!params.dreamMajor) {
+        throw new HttpError(400, "dreamMajor is required when filterType is DREAM_MAJOR");
+      }
+      return getDreamMajorLeaderboard(params.dreamMajor, limit);
     default:
-      // Should be unreachable if validation is correct
       throw new HttpError(400, "Invalid filterType");
   }
+}
+
+export async function getAvailableDreamMajors(): Promise<string[]> {
+  const rows = await prisma.profile.findMany({
+    where: {
+      dreamMajor: { not: null }
+    },
+    select: { dreamMajor: true },
+    distinct: ["dreamMajor"]
+  });
+
+  return rows
+    .map((r) => r.dreamMajor as string)
+    .filter(Boolean)
+    .sort((a, b) => a.localeCompare(b, "id"));
 }
 
 async function getOverallLeaderboard(limit: number): Promise<LeaderboardEntry[]> {
@@ -163,6 +183,58 @@ async function getTryoutLeaderboard(examId: string, limit: number): Promise<Lead
   });
 
   return entries;
+}
+
+async function getDreamMajorLeaderboard(dreamMajor: string, limit: number): Promise<LeaderboardEntry[]> {
+  const profiles = await prisma.profile.findMany({
+    where: {
+      dreamMajor: {
+        equals: dreamMajor,
+        mode: "insensitive"
+      }
+    },
+    select: { id: true }
+  });
+
+  if (profiles.length === 0) return [];
+
+  const userIds = profiles.map((p) => p.id);
+
+  const grouped = await prisma.tryoutSession.groupBy({
+    by: ["userId"],
+    where: {
+      userId: { in: userIds },
+      status: "completed",
+      score: { not: null }
+    },
+    _avg: { score: true }
+  });
+
+  if (grouped.length === 0) return [];
+
+  const sorted = grouped
+    .map((g) => ({ userId: g.userId, avgScore: g._avg.score ?? 0 }))
+    .sort((a, b) => b.avgScore - a.avgScore)
+    .slice(0, limit);
+
+  const sortedUserIds = sorted.map((g) => g.userId);
+  const profileRows = await prisma.profile.findMany({
+    where: { id: { in: sortedUserIds } },
+    select: { id: true, fullName: true }
+  });
+
+  const profileMap = new Map(profileRows.map((p) => [p.id, p]));
+
+  return sorted.map<LeaderboardEntry>((item, index) => {
+    const profile = profileMap.get(item.userId);
+    return {
+      rank: index + 1,
+      userId: item.userId,
+      fullName: profile?.fullName ?? "Unknown",
+      score: Number.isFinite(item.avgScore) ? Number(item.avgScore.toFixed(2)) : 0,
+      avatarUrl: null
+    };
+  });
 }
 
 async function getSubjectLeaderboard(subject: SubjectFilter, limit: number): Promise<LeaderboardEntry[]> {
