@@ -137,6 +137,8 @@ export async function submitSession(sessionId: string, userId: string) {
             select: {
               id: true,
               sequenceNumber: true,
+              text: true,
+              imageUrl: true,
               explanation: true,
               options: {
                 select: {
@@ -174,6 +176,8 @@ export async function getSession(sessionId: string, userId: string) {
             select: {
               id: true,
               sequenceNumber: true,
+              text: true,
+              imageUrl: true,
               explanation: true,
               options: {
                 select: {
@@ -229,7 +233,15 @@ export async function listUserSessions(userId: string) {
 }
 
 async function appendMissingAnswers(session: any) {
-  const answeredQuestionIds = new Set<string>(session.answers.map((a: any) => String(a.question.id)));
+  const uniqueAnswersMap = new Map();
+  for (const a of session.answers) {
+    const qid = String(a.question.id);
+    if (!uniqueAnswersMap.has(qid) || (!uniqueAnswersMap.get(qid).optionId && a.optionId)) {
+      uniqueAnswersMap.set(qid, a);
+    }
+  }
+  const deduplicatedAnswers = Array.from(uniqueAnswersMap.values());
+  const answeredQuestionIds = new Set<string>(deduplicatedAnswers.map((a: any) => String(a.question.id)));
 
   const missingQuestions = await prisma.question.findMany({
     where: {
@@ -240,6 +252,8 @@ async function appendMissingAnswers(session: any) {
     select: {
       id: true,
       sequenceNumber: true,
+      text: true,
+      imageUrl: true,
       explanation: true,
       options: {
         select: {
@@ -263,8 +277,8 @@ async function appendMissingAnswers(session: any) {
 
   return {
     ...session,
-    answers: [...session.answers, ...missingAnswers].sort(
-      (a, b) => a.question.sequenceNumber - b.question.sequenceNumber
+    answers: [...deduplicatedAnswers, ...missingAnswers].sort(
+      (a: any, b: any) => a.question.sequenceNumber - b.question.sequenceNumber
     ),
   };
 }
