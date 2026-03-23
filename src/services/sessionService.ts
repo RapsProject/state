@@ -115,7 +115,7 @@ export async function submitSession(sessionId: string, userId: string) {
 
   const result = await gradeSession(sessionId);
 
-  return prisma.tryoutSession.update({
+  const updatedSession = await prisma.tryoutSession.update({
     where: { id: sessionId },
     data: {
       status: "completed",
@@ -125,10 +125,18 @@ export async function submitSession(sessionId: string, userId: string) {
     include: {
       answers: {
         include: {
-          option: { select: { id: true, isCorrect: true } },
+          option: {
+            select: {
+              id: true,
+              sequenceNumber: true,
+              text: true,
+              isCorrect: true,
+            },
+          },
           question: {
             select: {
               id: true,
+              sequenceNumber: true,
               explanation: true,
               options: {
                 select: {
@@ -144,6 +152,8 @@ export async function submitSession(sessionId: string, userId: string) {
       },
     },
   });
+
+  return appendMissingAnswers(updatedSession);
 }
 
 export async function getSession(sessionId: string, userId: string) {
@@ -205,7 +215,7 @@ export async function getSession(sessionId: string, userId: string) {
     };
   }
 
-  return session;
+  return appendMissingAnswers(session);
 }
 
 export async function listUserSessions(userId: string) {
@@ -216,4 +226,45 @@ export async function listUserSessions(userId: string) {
       tryout: { select: { id: true, title: true, type: true } },
     },
   });
+}
+
+async function appendMissingAnswers(session: any) {
+  const answeredQuestionIds = new Set<string>(session.answers.map((a: any) => String(a.question.id)));
+
+  const missingQuestions = await prisma.question.findMany({
+    where: {
+      tryoutId: session.tryoutId,
+      isActive: true,
+      id: { notIn: Array.from(answeredQuestionIds) },
+    },
+    select: {
+      id: true,
+      sequenceNumber: true,
+      explanation: true,
+      options: {
+        select: {
+          id: true,
+          sequenceNumber: true,
+          text: true,
+          isCorrect: true,
+        },
+      },
+    },
+  });
+
+  const missingAnswers = missingQuestions.map((q) => ({
+    id: `unanswered-${q.id}`,
+    questionId: q.id,
+    optionId: null,
+    isMarkedForReview: false,
+    option: null,
+    question: q,
+  }));
+
+  return {
+    ...session,
+    answers: [...session.answers, ...missingAnswers].sort(
+      (a, b) => a.question.sequenceNumber - b.question.sequenceNumber
+    ),
+  };
 }
