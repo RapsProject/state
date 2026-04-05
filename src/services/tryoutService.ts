@@ -95,7 +95,7 @@ export async function getUserTryoutAccessContext(userId: string) {
       role: true,
       subscriptions: {
         where: { status: "active" },
-        orderBy: { endDate: "desc" },
+        orderBy: { startDate: "desc" },
         take: 1,
         include: {
           // Keep planName fallback for older rows or stale relations.

@@ -74,8 +74,6 @@ export async function handleMidtransWebhook(payload: MidtransWebhookPayload) {
 
   if (status === "settlement") {
     const startDate = new Date();
-    const endDate = new Date(startDate);
-    endDate.setDate(endDate.getDate() + transaction.plan.durationDays);
 
     const profile = await prisma.profile.findUnique({
       where: { id: transaction.userId },
@@ -93,10 +91,9 @@ export async function handleMidtransWebhook(payload: MidtransWebhookPayload) {
         planName,
         transactionId: transaction.id,
         startDate,
-        endDate,
         status: "active",
       },
-      update: { status: "active", startDate, endDate, userName, planName },
+      update: { status: "active", startDate, userName, planName },
     });
 
     // Expire previous active subscriptions for this user (excluding current)
@@ -105,7 +102,6 @@ export async function handleMidtransWebhook(payload: MidtransWebhookPayload) {
         userId: transaction.userId,
         status: "active",
         NOT: { transactionId: transaction.id },
-        endDate: { lt: new Date() },
       },
       data: { status: "expired" },
     });

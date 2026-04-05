@@ -217,7 +217,6 @@ model UserSubscription {
   transactionId String             @unique
   transaction   Transaction        @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   startDate     DateTime
-  endDate       DateTime
   status        SubscriptionStatus @default(active)
 
   @@map("user_subscriptions")

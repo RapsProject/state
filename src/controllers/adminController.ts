@@ -21,7 +21,6 @@ export const listUsers: RequestHandler = async (_req, res, next) => {
             id: true,
             status: true,
             startDate: true,
-            endDate: true,
             plan: {
               select: { id: true, name: true, price: true, durationDays: true },
             },
