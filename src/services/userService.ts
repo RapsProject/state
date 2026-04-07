@@ -31,7 +31,7 @@ export async function getProfileById(id: string) {
     include: {
       subscriptions: {
         where: { status: "active" },
-        orderBy: { endDate: "desc" },
+        orderBy: { startDate: "desc" },
         take: 1,
         include: { plan: true },
       },
