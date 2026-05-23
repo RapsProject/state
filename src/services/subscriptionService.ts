@@ -1,5 +1,6 @@
 import { prisma } from "../config/prisma";
 import { HttpError } from "../middlewares/error";
+import { env } from "../config/env";
 
 export type CreatePlanInput = {
   name: string;
@@ -10,9 +11,9 @@ export type CreatePlanInput = {
 export type CreateTransactionInput = {
   userId: string;
   planId: string;
-  midtransOrderId: string;
-  amount: number;
-  paymentUrl?: string;
+  email: string;
+  fullName: string;
+  phone?: string;
 };
 
 export type MidtransWebhookPayload = {
@@ -38,16 +39,61 @@ export async function createTransaction(input: CreateTransactionInput) {
   });
   if (!plan) throw new HttpError(404, "Subscription plan not found or inactive");
 
-  return prisma.transaction.create({
+  if (!env.MIDTRANS_SERVER_KEY) {
+    throw new HttpError(500, "Midtrans Server Key is not configured.");
+  }
+
+  const orderId = `TRX-${Date.now()}-${Math.floor(Math.random() * 1000)}`;
+  const midtransUrl = env.MIDTRANS_IS_PRODUCTION
+    ? "https://app.midtrans.com/snap/v1/transactions"
+    : "https://app.sandbox.midtrans.com/snap/v1/transactions";
+
+  const payload = {
+    transaction_details: {
+      order_id: orderId,
+      gross_amount: plan.price,
+    },
+    customer_details: {
+      first_name: input.fullName,
+      email: input.email,
+      phone: input.phone || "",
+    },
+    credit_card: { secure: true },
+  };
+
+  const response = await fetch(midtransUrl, {
+    method: "POST",
+    headers: {
+      "Accept": "application/json",
+      "Content-Type": "application/json",
+      "Authorization": `Basic ${Buffer.from(env.MIDTRANS_SERVER_KEY + ":").toString("base64")}`,
+    },
+    body: JSON.stringify(payload),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    console.error("Midtrans Error:", errorText);
+    throw new HttpError(500, "Failed to create transaction with Midtrans");
+  }
+
+  const midtransData = await response.json() as { token: string; redirect_url: string };
+
+  const transaction = await prisma.transaction.create({
     data: {
       userId: input.userId,
       planId: input.planId,
-      midtransOrderId: input.midtransOrderId,
-      amount: input.amount,
-      paymentUrl: input.paymentUrl ?? null,
+      midtransOrderId: orderId,
+      amount: plan.price,
+      paymentUrl: midtransData.redirect_url,
     },
     include: { plan: true },
   });
+
+  return {
+    ...transaction,
+    snapToken: midtransData.token,
+  };
 }
 
 export async function listUserTransactions(userId: string) {

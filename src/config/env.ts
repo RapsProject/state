@@ -15,7 +15,14 @@ const EnvSchema = z.object({
   SUPABASE_JWT_SECRET: z.string().min(1),
   SUPABASE_URL: z.string().url().optional(),
   SUPABASE_SERVICE_ROLE_KEY: z.string().min(1).optional(),
-  CORS_ORIGIN: z.string().optional()
+  CORS_ORIGIN: z.string().optional(),
+  
+  MIDTRANS_SERVER_KEY: z.string().optional(),
+  MIDTRANS_CLIENT_KEY: z.string().optional(),
+  MIDTRANS_IS_PRODUCTION: z.preprocess(
+    (val) => val === "true" || val === "1" || val === true,
+    z.boolean()
+  ).default(false)
 });
 
 export const env = EnvSchema.parse(process.env);

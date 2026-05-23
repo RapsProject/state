@@ -67,7 +67,7 @@ export const mockTopics = [
 
 export const mockTryout = {
   id: "tryout-grand-01",
-  title: "IUP ITB Grand Simulation - Batch 1",
+  title: "IUP International Class Grand Simulation - Batch 1",
   type: "simulation",
   duration_minutes: 120,
   max_attempts: 5,
