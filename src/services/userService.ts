@@ -9,7 +9,10 @@ export type SyncProfileInput = {
 };
 
 export async function syncProfile(input: SyncProfileInput) {
-  return prisma.profile.upsert({
+  // Check if user already exists to determine if this is a new registration
+  const existing = await prisma.profile.findUnique({ where: { id: input.id } });
+
+  const profile = await prisma.profile.upsert({
     where: { id: input.id },
     create: {
       id: input.id,
@@ -23,6 +26,35 @@ export async function syncProfile(input: SyncProfileInput) {
       ...(input.schoolOrigin != null && { schoolOrigin: input.schoolOrigin }),
     },
   });
+
+  // If this is a brand-new user, assign the "Free" subscription plan
+  if (!existing) {
+    const freePlan = await prisma.subscriptionPlan.findFirst({
+      where: { name: "Free", isActive: true },
+    });
+
+    if (freePlan) {
+      // Only create if no active subscription already exists
+      const activeSub = await prisma.userSubscription.findFirst({
+        where: { userId: input.id, status: "active" },
+      });
+
+      if (!activeSub) {
+        await prisma.userSubscription.create({
+          data: {
+            userId: input.id,
+            userName: input.fullName,
+            planId: freePlan.id,
+            planName: freePlan.name,
+            startDate: new Date(),
+            status: "active",
+          },
+        });
+      }
+    }
+  }
+
+  return profile;
 }
 
 export async function getProfileById(id: string) {
