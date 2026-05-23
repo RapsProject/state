@@ -14,9 +14,6 @@ const createPlanSchema = z.object({
 
 const createTransactionSchema = z.object({
   planId: z.string().uuid(),
-  midtransOrderId: z.string().min(1),
-  amount: z.number().int().positive(),
-  paymentUrl: z.string().url().optional(),
 });
 
 const webhookSchema = z.object({

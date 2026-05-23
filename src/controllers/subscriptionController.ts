@@ -24,18 +24,15 @@ export const createPlan: RequestHandler = async (req, res, next) => {
 
 export const createTransaction: RequestHandler = async (req, res, next) => {
   try {
-    const { planId, midtransOrderId, amount, paymentUrl } = req.body as {
-      planId: string;
-      midtransOrderId: string;
-      amount: number;
-      paymentUrl?: string;
-    };
+    const { planId } = req.body as { planId: string };
+    const user = req.user!;
+    
     const data = await subscriptionService.createTransaction({
-      userId: req.user!.id,
+      userId: user.id,
+      email: user.email || "",
+      fullName: user.fullName || "User",
+      phone: user.claims?.phone_number ? String(user.claims.phone_number) : undefined,
       planId,
-      midtransOrderId,
-      amount,
-      paymentUrl,
     });
     return res.status(201).json(ok("Transaction created", data));
   } catch (e) {
