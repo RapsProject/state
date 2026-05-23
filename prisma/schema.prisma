@@ -214,8 +214,8 @@ model UserSubscription {
   planId        String
   planName      String?            // Nama plan saat subscription dibuat (untuk tampilan di tabel)
   plan          SubscriptionPlan   @relation(fields: [planId], references: [id], onDelete: Cascade)
-  transactionId String             @unique
-  transaction   Transaction        @relation(fields: [transactionId], references: [id], onDelete: Cascade)
+  transactionId String?            @unique
+  transaction   Transaction?       @relation(fields: [transactionId], references: [id], onDelete: Cascade)
   startDate     DateTime
   status        SubscriptionStatus @default(active)
 
