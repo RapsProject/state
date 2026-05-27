@@ -80,8 +80,8 @@ async function main() {
   console.log("Memasukkan data Subscription Plans...");
   const planData = [
     { name: "Free", price: 0, durationDays: 0 },
-    { name: "Premium", price: 349_000, durationDays: 30 },
-    { name: "Ultimate", price: 599_000, durationDays: 30 },
+    { name: "Premium", price: 99_000, durationDays: 30 },
+    { name: "Ultimate", price: 129_000, durationDays: 30 },
   ];
   for (const p of planData) {
     const existing = await prisma.subscriptionPlan.findFirst({ where: { name: p.name } });

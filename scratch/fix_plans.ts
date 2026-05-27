@@ -12,8 +12,8 @@ async function main() {
   // 2. Definisi plan yang seharusnya ada
   const expectedPlans = [
     { name: "Free", price: 0, durationDays: 0 },
-    { name: "Premium", price: 69_000, durationDays: 30 },
-    { name: "Ultimate", price: 99_000, durationDays: 30 },
+    { name: "Premium", price: 99_000, durationDays: 30 },
+    { name: "Ultimate", price: 129_000, durationDays: 30 },
   ];
 
   // 3. Upsert: buat yang hilang, update harga yang sudah ada
