@@ -39,18 +39,39 @@ export const listUsers: RequestHandler = async (_req, res, next) => {
 
 export const getUsersSummary: RequestHandler = async (_req, res, next) => {
   try {
-    const [totalUsers, totalActive, totalAdmin] = await Promise.all([
+    const [totalUsers, totalAdmin, paidSubscriptions] = await Promise.all([
       prisma.profile.count(),
-      prisma.userSubscription.count({ where: { status: "active" } }),
       prisma.profile.count({ where: { role: "admin" } }),
+      // Count only paid (non-Free) active subscriptions
+      prisma.userSubscription.findMany({
+        where: {
+          status: "active",
+          plan: { name: { not: "Free" } },
+        },
+        select: {
+          plan: { select: { name: true } },
+        },
+      }),
     ]);
+
+    // Build per-plan breakdown
+    const planCounts: Record<string, number> = {};
+    for (const sub of paidSubscriptions) {
+      const name = sub.plan.name;
+      planCounts[name] = (planCounts[name] || 0) + 1;
+    }
+    const subscriptionDetails = Object.entries(planCounts).map(([name, count]) => ({
+      name,
+      count,
+    }));
 
     return res.json(
       ok("Operation successful", {
         totalUsers,
-        totalActiveSubscriptions: totalActive,
+        totalActiveSubscriptions: paidSubscriptions.length,
         totalAdmins: totalAdmin,
         totalStudents: totalUsers - totalAdmin,
+        subscriptionDetails,
       }),
     );
   } catch (e) {
