@@ -31,6 +31,6 @@ router.get("/transactions", authMiddleware, subscriptionController.listTransacti
 router.post("/transactions", authMiddleware, validateBody(createTransactionSchema), subscriptionController.createTransaction);
 
 // Midtrans webhook (no auth — called by Midtrans server)
-router.post("/transactions/webhook", validateBody(webhookSchema), subscriptionController.midtransWebhook);
+router.post("/transactions/webhook", subscriptionController.midtransWebhook);
 
 export default router;

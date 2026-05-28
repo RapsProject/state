@@ -51,9 +51,15 @@ export const listTransactions: RequestHandler = async (req, res, next) => {
 
 export const midtransWebhook: RequestHandler = async (req, res, next) => {
   try {
-    const result = await subscriptionService.handleMidtransWebhook(
-      req.body as Parameters<typeof subscriptionService.handleMidtransWebhook>[0]
-    );
+    const payload = req.body;
+
+    // Handle Midtrans dashboard "Tes URL notifikasi" button or empty pings gracefully
+    if (!payload || !payload.order_id || !payload.transaction_status) {
+      console.log("ℹ️ Received Midtrans Test Ping or empty payload:", payload);
+      return res.json(ok("Notification URL tested successfully (Test Ping)"));
+    }
+
+    const result = await subscriptionService.handleMidtransWebhook(payload);
     return res.json(ok("Webhook processed", result));
   } catch (e) {
     return next(e);
