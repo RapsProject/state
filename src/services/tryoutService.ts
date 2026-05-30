@@ -120,21 +120,16 @@ export async function getUserTryoutAccessContext(userId: string) {
 type ListTryoutsOptions = {
   onlyPublished?: boolean;
   includeInactive?: boolean;
-  userId?: string;
 };
 
 export async function listTryouts(options?: ListTryoutsOptions) {
-  const { onlyPublished = true, includeInactive = false, userId } = options ?? {};
+  const { onlyPublished = true, includeInactive = false } = options ?? {};
 
   const where: Prisma.TryoutWhereInput = {};
   if (!includeInactive) where.isActive = true;
   if (onlyPublished) where.isPublished = true;
-  if (userId) {
-    const accessContext = await getUserTryoutAccessContext(userId);
-    if (accessContext.role !== "admin") {
-      where.access = { in: getAccessibleTryoutAccesses(accessContext.tier) };
-    }
-  }
+  // No access filtering here — return ALL published tryouts to all users.
+  // The frontend handles lock/unlock display based on user subscription tier.
 
   const tryouts = await prisma.tryout.findMany({
     where,
